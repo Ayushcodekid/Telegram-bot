@@ -1,0 +1,75 @@
+/* Container Styling */
+.users-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    color: #333;
+  }
+  
+  /* Table Styling */
+  .users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .users-table th,
+  .users-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .users-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+  }
+  
+  .users-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .users-table tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  /* Subscribed/Unsubscribed Styling */
+  .subscribed {
+    color: green;
+    font-weight: bold;
+  }
+  
+  .unsubscribed {
+    color: red;
+    font-weight: bold;
+  }
+  
+  /* Button Styling */
+  button {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .block-btn {
+    background-color: #ffcc00;
+    color: #333;
+    margin-right: 8px;
+  }
+  
+  .block-btn:hover {
+    background-color: #ffb700;
+  }
+  
+  .delete-btn {
+    background-color: #ff4d4d;
+    color: white;
+  }
+  
+  .delete-btn:hover {
+    background-color: #e60000;
+  }
+  
