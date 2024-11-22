@@ -23,23 +23,41 @@ bot.onText(/\/start/, async (msg) => {
 });
 
 // Subscribe command
+// Subscribe command
 bot.onText(/\/subscribe/, async (msg) => {
   const chatId = msg.chat.id;
   const user = await User.findOne({ chatId });
 
   if (user) {
-    user.subscribed = !user.subscribed;
+    user.subscribed = true; // Ensure the user is subscribed
     await user.save();
 
-    const message = user.subscribed
-      ? "You are now subscribed to weather updates!"
-      : "You have unsubscribed from weather updates.";
+    const message = "You are now subscribed to weather updates!";
     bot.sendMessage(chatId, message);
+  } else {
+    bot.sendMessage(chatId, "Please use /start first to initialize your account.");
   }
 });
 
+// Unsubscribe command
+bot.onText(/\/unsubscribe/, async (msg) => {
+  const chatId = msg.chat.id;
+  const user = await User.findOne({ chatId });
+
+  if (user) {
+    user.subscribed = false; // Ensure the user is unsubscribed
+    await user.save();
+
+    const message = "You have unsubscribed from weather updates.";
+    bot.sendMessage(chatId, message);
+  } else {
+    bot.sendMessage(chatId, "Please use /start first to initialize your account.");
+  }
+});
+
+
 // Weather update
-const fetchWeather = async (location = "New York") => {
+const fetchWeather = async (location = "Bengaluru") => {
   const apiKey = process.env.OPENWEATHER_API_KEY;
   const response = await fetch(
     `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}&units=metric`
@@ -47,10 +65,77 @@ const fetchWeather = async (location = "New York") => {
   const data = await response.json();
 
   if (data.cod === 200) {
-    return `Weather in ${data.name}: ${data.weather[0].description}. Temperature: ${data.main.temp}°C.`;
+    return {
+      description: data.weather[0].description,
+      temperature: `${data.main.temp}°C`,
+      sunrise: new Date(data.sys.sunrise * 1000).toLocaleTimeString(),
+      sunset: new Date(data.sys.sunset * 1000).toLocaleTimeString(),
+      location: data.name,
+    };
   }
-  return "Error fetching weather data.";
+  return null;
 };
+
+// Weather command
+bot.onText(/\/weather (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const location = match[1];
+  const weather = await fetchWeather(location);
+
+  if (weather) {
+    bot.sendMessage(chatId, `Weather in ${weather.location}:
+- Description: ${weather.description}
+- Temperature: ${weather.temperature}`);
+  } else {
+    bot.sendMessage(chatId, "Error fetching weather data. Please try again.");
+  }
+});
+
+// Sunrise command
+bot.onText(/\/sunrise (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const location = match[1];
+  const weather = await fetchWeather(location);
+
+  if (weather) {
+    bot.sendMessage(chatId, `In ${weather.location}:
+- Sunrise: ${weather.sunrise}
+- Sunset: ${weather.sunset}`);
+  } else {
+    bot.sendMessage(chatId, "Error fetching sunrise/sunset data. Please try again.");
+  }
+});
+
+
+
+bot.onText(/\/compare (.+) (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const city1 = match[1];
+  const city2 = match[2];
+
+  const weather1 = await fetchWeather(city1);
+  const weather2 = await fetchWeather(city2);
+
+  if (weather1 && weather2) {
+    const comparison = `Weather Comparison:\n\n${city1}:
+- Description: ${weather1.description}
+- Temperature: ${weather1.temperature}
+- Sunrise: ${weather1.sunrise}
+- Sunset: ${weather1.sunset}
+
+${city2}:
+- Description: ${weather2.description}
+- Temperature: ${weather2.temperature}
+- Sunrise: ${weather2.sunrise}
+- Sunset: ${weather2.sunset}`;
+
+    bot.sendMessage(chatId, comparison);
+  } else {
+    bot.sendMessage(chatId, "Error fetching weather data for one or both cities. Please try again.");
+  }
+});
+
+
 
 // Broadcast updates
 const sendWeatherUpdates = async () => {
@@ -58,7 +143,11 @@ const sendWeatherUpdates = async () => {
 
   subscribedUsers.forEach(async (user) => {
     const weather = await fetchWeather();
-    bot.sendMessage(user.chatId, weather);
+    if (weather) {
+      bot.sendMessage(user.chatId, `Weather in ${weather.location}:
+- Description: ${weather.description}
+- Temperature: ${weather.temperature}`);
+    }
   });
 };
 
